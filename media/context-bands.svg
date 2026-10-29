@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="316" viewBox="0 0 900 316" font-family="ui-sans-serif,system-ui,sans-serif">
+<rect width="100%" height="100%" fill="#0d1117"/>
+<text x="130" y="26" fill="#e6edf3" font-size="15" font-weight="600">Cache-read por banda de contexto (7 días)</text>
+<text x="130" y="46" fill="#8b949e" font-size="11">barra clara = observado · barra oscura = proyectado con umbral 80k</text>
+<text x="118" y="79" fill="#8b949e" font-size="11" text-anchor="end">&lt;20k</text>
+<rect x="130" y="64" width="6.0" height="20" fill="#2f81f7" rx="3"/>
+<rect x="130" y="79" width="6.0" height="5" fill="#1f6feb" rx="2"/>
+<text x="144.020236876662" y="79" fill="#8b949e" font-size="10">6M tok · 426 llamadas</text>
+<text x="118" y="113" fill="#8b949e" font-size="11" text-anchor="end">20k+</text>
+<rect x="130" y="98" width="10.1" height="20" fill="#2f81f7" rx="3"/>
+<rect x="130" y="113" width="10.1" height="5" fill="#1f6feb" rx="2"/>
+<text x="148.13885956774283" y="113" fill="#8b949e" font-size="10">10M tok · 312 llamadas</text>
+<text x="118" y="147" fill="#8b949e" font-size="11" text-anchor="end">40k+</text>
+<rect x="130" y="132" width="107.5" height="20" fill="#2f81f7" rx="3"/>
+<rect x="130" y="147" width="107.5" height="5" fill="#1f6feb" rx="2"/>
+<text x="245.4629330948475" y="147" fill="#8b949e" font-size="10">107M tok · 1599 llamadas</text>
+<text x="118" y="181" fill="#8b949e" font-size="11" text-anchor="end">80k+</text>
+<rect x="130" y="166" width="105.8" height="20" fill="#2f81f7" rx="3"/>
+<rect x="130" y="181" width="90.6" height="5" fill="#1f6feb" rx="2"/>
+<text x="243.76155678177128" y="181" fill="#8b949e" font-size="10">105M tok · 1001 llamadas</text>
+<text x="118" y="215" fill="#8b949e" font-size="11" text-anchor="end">120k+</text>
+<rect x="130" y="200" width="179.6" height="20" fill="#2f81f7" rx="3"/>
+<rect x="130" y="215" width="133.3" height="5" fill="#1f6feb" rx="2"/>
+<text x="317.6430976300552" y="215" fill="#8b949e" font-size="10">178M tok · 1017 llamadas</text>
+<text x="118" y="249" fill="#8b949e" font-size="11" text-anchor="end">200k+</text>
+<rect x="130" y="234" width="600.0" height="20" fill="#2f81f7" rx="3"/>
+<rect x="130" y="249" width="523.3" height="5" fill="#1f6feb" rx="2"/>
+<text x="738.0" y="249" fill="#8b949e" font-size="10">595M tok · 1727 llamadas</text>
+</svg>

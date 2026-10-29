@@ -1,0 +1,19 @@
+# Evidencia 01 - base 7 dias medida con el script ya corregido.
+# Ventana 2026-09-23 00:00 -> 2026-09-29 23:5x PDT. El cambio entro en vigor 23:51, asi que la ventana es baseline casi limpio (5 min nuevos).
+
+WINDOW 2026-09-23 00:00 -> 2026-09-29 23:53   calls=6321
+
+date        calls  inp_tok    cached_tok  out_tok  tool_calls  >80k  >120k  errs  comp
+2026-09-23     25    1531125      689360     8428          13     6      0     4     0
+2026-09-24    141     230988     4039712    43905          62     0      0    50     1
+2026-09-25    592    4816515   135901552   552980         647   444    400     8     1
+2026-09-26    767   12596674   152027520  1489330        1257   594    492     0     1
+2026-09-27   2063   17865092   477383602  2023012        2550  1633   1474     1     4
+2026-09-28   1307    7318145   130955776  1434711        1744   645    260     0     8
+2026-09-29   1426   10190474   118043491  1791631        1935   505    118    12    74
+
+avg ctx/call=146123  p50=93645  p95=381370  max=445444
+cache-read total=1,019,041,013  fresh input=54,549,013  hit_ratio=0.9492
+compressions=89  trigger_tokens avg=168,607 min=97,378 max=505,578
+sessions=102  api_calls=4432  tool_calls=3797  messages=6642  ineffective_compressions=0  rewinds=0  cache_read(sessiondb)=620,958,565
+calls by route: {'fallback': 61, 'primary': 25, 'auxiliary': 6235}

@@ -1,0 +1,52 @@
+# Evidencia Etapa 1 - suite E2E de la puerta en sandbox (HERMES_HOME propio, config vivo intacto)
+# generado 2026-09-29 23:01:25 PDT
+
+########## A) marcador presente -> aplica + cierra ##########
+✅ Etapa 1 contexto aplicada (80k/16). Marcador Sesion 1 detectado.
+· config.yaml: 80000 / 16  (umbral efectivo = 80000 tok, contexto 128,000)
+· diff minimo: 2 claves -> -  protect_last_n: 20 | -  threshold_tokens: 120000
+· cierre escrito: /tmp/stage1c_A/docs/02-context-DONE.md
+· backup rollback: /tmp/stage1c_A/config.yaml.bak-stage1-apply-20260929-230126
+· sesiones YA abiertas siguen con 120k; las nuevas toman 80k (no reinicie nada).
+· medir manana: python3 ~/.hermes/scripts/context_stage1_metrics.py --days 2
+· rollback quirurgico: hermes config set compression.threshold_tokens 120000 && hermes config set compression.protect_last_n 20
+rc=0
+-- pasada 2 (debe ir vacia):
+rc=0
+-- yaml:
+85:  protect_last_n: 16
+86:  threshold_tokens: 80000
+-- cierre:
+-rw-rw-r-- 1 spamer93 spamer93 4056 sep 29 23:01 /tmp/stage1c_A/docs/02-context-DONE.md
+# 02 · Reduccion de contexto DeepSeek (Etapa 1: 120k/20 -> 80k/16) — CIERRE
+
+**Fecha:** 2026-09-29 23:01 PDT · **Autor:** Hermes (Sesion 2) · **Modelo:** `deepseek-v4.1-flash` (opencode-go) — sin cambios
+**Estado:** APLICADA Y VALIDADA. Este fichero cierra la Sesion 2 y abre el gate de la Sesion 3.
+
+-- estado:
+applied {'compression.threshold_tokens': '80000', 'compression.protect_last_n': '16'} ['-  protect_last_n: 20', '-  threshold_tokens: 120000', '+  protect_last_n: 16', '+  threshold_tokens: 80000'] drift= False
+########## B) config movido en OTRA clave (deriva) -> aplica igual ##########
+✓ Set compression.target_ratio = 0.25 in /tmp/stage1c_B/config.yaml
+✅ Etapa 1 contexto aplicada (80k/16). Marcador Sesion 1 detectado.
+· config.yaml: 80000 / 16  (umbral efectivo = 80000 tok, contexto 128,000)
+· diff minimo: 2 claves -> -  protect_last_n: 20 | -  threshold_tokens: 120000
+· cierre escrito: /tmp/stage1c_B/docs/02-context-DONE.md
+· backup rollback: /tmp/stage1c_B/config.yaml.bak-stage1-apply-20260929-230130
+· sesiones YA abiertas siguen con 120k; las nuevas toman 80k (no reinicie nada).
+· medir manana: python3 ~/.hermes/scripts/context_stage1_metrics.py --days 2
+· rollback quirurgico: hermes config set compression.threshold_tokens 120000 && hermes config set compression.protect_last_n 20
+rc=0
+84:  target_ratio: 0.25
+applied {'compression.threshold_tokens': '80000', 'compression.protect_last_n': '16'} drift= True ['-  protect_last_n: 20', '-  threshold_tokens: 120000', '+  protect_last_n: 16', '+  threshold_tokens: 80000']
+########## C) claves de compresion inesperadas -> ABORTA ##########
+⚠️ Etapa 1 contexto: NO aplicada. Las claves de compresion ya no tienen su valor previo ({'compression.threshold_tokens': '120000', 'compression.protect_last_n': '20'}) sino {'compression.threshold_tokens': '100000', 'compression.protect_last_n': '20'}. No escribo a ciegas: revisar a mano.
+rc=0
+aborted {'compression.threshold_tokens': '100000', 'compression.protect_last_n': '20'} claves de compresion fuera de su valor previo
+86:  threshold_tokens: 100000
+########## D) sin marcador -> silencio ##########
+stdout=[]
+/tmp/stage1c_D/docs/:
+
+/tmp/stage1c_D/state/:
+########## config vivo ##########
+OK: config.yaml vivo INTACTO (1ecec9b5f9445b895c08da0a383a6b1581ec182449cb8c0c9b1689fff753bc46)

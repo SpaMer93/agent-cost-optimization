@@ -1,0 +1,24 @@
+# Evidencia Etapa 1 - resolucion efectiva ANTES del cambio (codigo de produccion, sin LLM)
+# generado 2026-09-29 23:01:24 PDT
+
+resolved context_length for opencode-go/deepseek-v4.1-flash: 1,000,000
+
+threshold_tokens_effective: 120000
+threshold_tokens_cap: 120000
+protect_last_n: 20
+main_tail_min_messages: 8
+tail_token_budget: 25000
+context_length: 1000000
+
+## grep config.yaml antes
+85:  protect_last_n: 20
+86:  threshold_tokens: 120000
+
+## sha256 config.yaml (pre-cambio) + backups
+1ecec9b5f9445b895c08da0a383a6b1581ec182449cb8c0c9b1689fff753bc46  ~/.hermes/config.yaml
+1ecec9b5f9445b895c08da0a383a6b1581ec182449cb8c0c9b1689fff753bc46  ~/.hermes/config.yaml.bak-context-stage1-20260929-225330
+
+## protect_last_n 20 vs 16 en la ruta principal (mismo corte de cola?)
+protect_last_n=20: tail_cut=12 tail_budget=25,000
+protect_last_n=16: tail_cut=12 tail_budget=25,000
+OK: el corte del tail principal es IDÉNTICO -> protect_last_n está topado a 8 mensajes en esa ruta.
