@@ -1,0 +1,33 @@
+Evidencia 05 - A/B de compression.proactive_prune_tokens
+Salida cruda del instrumento ~/.hermes/scripts/ab_prune_metrics.py, sin retocar.
+Fecha del cierre: 2026-10-29. Veredicto: 20.000 gana; 40.000 descartado; 0 ya estaba descartado.
+Ventanas (epoch): 20k-base 1790751060-1791319513 | brazo 0 1791319513-1792083150 |
+40k limpio 1792083150-1792198140 (corte en el primer glm-5.2, o sea antes de que muriera la cuota).
+La ventana bruta del 40k (342 h, 2.670 llamadas) se descarta por contaminacion de modelos.
+
+metrica                         20.000             0        40.000
+bloqueo_min                     825.54        226.72        284.55
+bloqueo_x_1000llam              165.37        247.51        208.00
+compactaciones                     322            82           203
+compact_min_x_1000llam           49.13        161.95        105.10
+ctx_p50                          53638         55726         60737
+ctx_p90                          68947         65261         78981
+lat_p50_s                         4.59          6.53          6.51
+lat_p90_s                        15.29         25.02         17.66
+cache_hit_pct                    87.70         85.61         83.78
+usd_x_llamada                     0.00          0.00          0.01
+eventos_sobre_gate                  27             0            15
+llamadas                          4992           916          1368
+turnos                             517           119           248
+sesiones                           141            40            38
+reintentos                          35             1             0
+
+Ventanas medidas:
+  base 20k:     2026-09-29 23:51 → 2026-10-06 13:45
+  brazo 0:      2026-10-06 13:45 → 2026-10-15 09:52
+  40k limpio:   2026-10-15 09:52 → 2026-10-16 17:49
+
+Mecanismo: con 40.000 el contexto p90 queda en 78.981, a 1.019 tokens del gate de 80.000;
+la compactacion dispara 203 veces en 31,9 h. Con 20.000 el p90 es 68.947 (11k de colchon)
+y las compactaciones bajan a 49,1 por 1.000 llamadas. Lo que rompe cache y latencia es la
+compactacion, no el prune.

@@ -1,6 +1,7 @@
 # 04 — Eficiencia real en producción: desperdicio medido y medidas (2026-09-29)
 
-**Estado:** análisis + diseño terminado. Patch preparado, **no activado**.
+**Estado:** cerrada el 2026-10-29: M6 aplicado (commit local `eec8f1c60`) y A/B del prune cerrado en 20,000 (§9).
+**Estado original (2026-09-29):** análisis + diseño terminado, patch preparado y sin activar.
 **Alcance:** ventana 09:10–22:18 PDT del 2026-09-29 · 4 sesiones con `WAIT_LONG_COMMAND`
 (`…785711`, `…875f79`, `…2caf1c`, `…62efbb`) + `…674a5a` (la de mayor consumo del día).
 **Fuentes (todas de solo lectura):**
@@ -233,3 +234,56 @@ en 3 días, `WAIT_LONG_COMMAND` real (con detector corregido) **< 25%** del valo
 - Clasificación de categorías: manual, ronda a ronda; los casos límite (p. ej. `sleep 330` necesario
   pero mal formado) están contados en **una** categoría, con nota.
 - No se ha medido nada posterior al 22:18; la muestra son 4 sesiones (47% del input del día).
+
+---
+
+## 9. Cierre (2026-10-29)
+
+### M6 aplicado: el detector ya no lee el contenido de los ficheros
+
+El arreglo va donde nace la señal, en `_waiting_calls()`: es la única función que alimenta
+los dos emisores (`WAIT_LONG_COMMAND` del evento y del checkpoint), así que un solo guard
+tapa los dos caminos.
+
+- `_PAYLOAD_TOOL_NAMES = {write_file, patch, memory, skill_manage}` y `continue` antes de
+  mirar argumentos: un cuerpo de fichero que mencione `sleep` no es una espera.
+- Suelo de 30 s en el patrón (`sleep (?:[3-9]\d|\d{3,})` y el equivalente para `timeout`).
+- Check: `~/lab/efficiency-2026-09-29/test_m6.py`, 11 aserciones entre falso positivo y
+  espera real. Verde.
+- Commit local `eec8f1c60` (encima de `f411a36bf`). El supervisor es código local, no
+  upstream: el `mode` sobrevive en `config.yaml`, el fichero no.
+
+Antes del parche la telemetría acumulaba **825** eventos `WAIT_LONG_COMMAND**, con picos de
+165 en un día y `skill_manage` entre los disparadores. Después entra en vigor en el
+siguiente arranque del proceso, porque el módulo ya cargado no se recarga solo.
+
+### A/B de `compression.proactive_prune_tokens`: gana 20.000
+
+| métrica | 0 (apagado) | **20.000** | 40.000 |
+|---|---:|---:|---:|
+| bloqueo / 1.000 llamadas | 247,5 min | **165,4** | 208,0 |
+| compactaciones / 1.000 llamadas | 162,0 | **49,1** | 105,1 |
+| contexto p50 / p90 | 55,7k / 65,3k | **53,6k / 68,9k** | 60,7k / 79,0k |
+| latencia p50 / p90 | 6,53 / 25,02 s | **4,59 / 15,29 s** | 6,51 / 17,66 s |
+| caché | 85,6 % | **87,7 %** | 83,8 % |
+| USD / llamada | 0,0039 | **0,0030** | 0,0050 |
+| eventos sobre el gate de 80k | 0 | 27 | 15 |
+
+**Mecanismo:** con 40.000 el p90 queda en 78.981, a 1.019 tokens del gate; el contexto vive
+en el borde y dispara compactación 203 veces en 31,9 h. La compactación es lo que rompe
+caché y latencia, no el prune. Con 20.000 hay 11k de colchón y la compactación se usa la
+mitad. Eso explica que el 20.000 tenga mejor caché que el prune apagado, que es lo contrario
+de la intuición inicial.
+
+**Aplicado:** `hermes config set compression.proactive_prune_tokens 20000`, verificado con
+`hermes config get` en proceso limpio y con un `diff` de una sola clave contra
+`config.yaml.bak-40k-20261029-164205`. Gate de 80.000 intacto.
+Rollback: `hermes config set compression.proactive_prune_tokens 40000` (o `0`).
+
+### Lo que queda abierto
+
+1. Agujero del gate (#166): 27 eventos con contexto por encima de 80.000 en la ventana de
+   20.000. Con prune apagado fueron 0, así que lo produce el prune y no la compactación.
+2. Nulos del ledger (`duration_ms`, `approx_input_tokens`, `cost`): limitan cualquier
+   análisis posterior.
+3. Prueba de proveedor (Ollama Pro) sobre la configuración ganadora, no sobre el 40.000.

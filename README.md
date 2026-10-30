@@ -25,6 +25,24 @@ La proyección sobre el histórico decía que las lecturas de caché bajarían 1
 
 **Y salió al revés.** La factura no baja: sube entre 1.4 y 2.7 dólares por semana. Comprimir más seguido rompe la caché más seguido, y ese pedazo se paga a precio completo. Lo que sí mejora es la latencia y el tamaño del contexto. Lo escribí en el reporte de cierre en vez de esconderlo, porque una medición que solo sirve cuando confirma la hipótesis no es una medición.
 
+## El tercer parámetro, que probé después
+
+Faltaba uno. `compression.proactive_prune_tokens` decide cuánto contexto se recorta de cada resultado de herramienta antes de que la conversación crezca. Lo probé en los tres valores que tenían sentido, cada uno en su ventana y todo normalizado por cada mil llamadas:
+
+| | apagado | 20,000 | 40,000 |
+|---|---:|---:|---:|
+| bloqueo por mil llamadas | 247.5 min | **165.4** | 208.0 |
+| compactaciones por mil llamadas | 162.0 | **49.1** | 105.1 |
+| contexto p90 | 65.3k | **68.9k** | 79.0k |
+| caché | 85.6 % | **87.7 %** | 83.8 % |
+| dólares por llamada | 0.0039 | **0.0030** | 0.0050 |
+
+El resultado no sorprendió. El motivo sí.
+
+Con 40,000 el contexto p90 se queda en 78,981 tokens, a mil del umbral de compresión de 80,000. Vive pegado al borde, lo cruza cada nueve llamadas y paga la compactación: 203 veces en 31 horas. Con 20,000 sobran once mil de colchón y la compactación se usa la mitad. Por eso el 20,000 acaba con mejor caché que el brazo apagado, que era exactamente lo contrario de lo que yo esperaba cuando empecé a medir.
+
+Una advertencia sobre la primera lectura, porque me pasó: la ventana del 40,000 que medí al principio tenía 342 horas y salía peor de lo que era. Incluía el día en que se agotó la cuota y el agente cayó a otros modelos. Al cortar en el último éxito del modelo titular, la ventana quedó en 31.9 horas y 1,368 llamadas. El veredicto no cambió, pero el número que publico es el limpio.
+
 ## Mi primera sospecha estaba mal
 
 Yo estaba seguro de que el dinero se iba en las esperas: comandos largos, compilaciones, cosas que dejan el agente dando vueltas. La telemetría tenía 36 filas marcadas como `WAIT_LONG_COMMAND`.
@@ -32,6 +50,8 @@ Yo estaba seguro de que el dinero se iba en las esperas: comandos largos, compil
 Fui a verlas una por una contra el código. Eran 26 esperas reales, no 36. Y de 54 llamadas revisadas, 13 no eran esperas: ocho eran `write_file` y `patch` cuyo *contenido* menciona `sleep` o `timeout` (escribir un vigilante no es esperar), y cinco eran guardas `timeout 12`. La métrica contaba la palabra, no el hecho.
 
 Las esperas reales costaban 28 minutos y 2.1 millones de tokens. Reales, medibles y no eran el problema.
+
+Cuando conté la telemetría entera tampoco cuadraban 36. Llevaba 825 eventos acumulados, con picos de 165 en un día y llamadas a `skill_manage` entre los disparadores. El detector buscaba el patrón en todos los argumentos, así que también leía el contenido de los ficheros. Lo arreglé en el código y no en el reporte: las herramientas que escriben ficheros ya no se escanean, y solo cuentan las esperas de treinta segundos para arriba. Once aserciones cubren los dos lados, el falso positivo y la espera de verdad.
 
 ## El problema era la ronda de más
 
@@ -51,6 +71,8 @@ Todo sale de fuentes de solo lectura: el registro de uso del modelo, la base de 
 
 Los precios van escritos en el script, con tarifa peak y off-peak, no un promedio inventado. Cada etapa cierra con un documento que incluye el cambio exacto, el hash de la configuración antes y después, un respaldo para volver atrás y el comando para revertir. Las etapas se prueban en un entorno aparte, con su propio directorio de trabajo: la prueba valida el script de aplicación, no la configuración viva.
 
+El A/B del tercer parámetro se cerró con dos reglas que me costaron caro aprender. La primera: se compara por llamada, no por día, porque las ventanas tienen tamaños distintos y el bloqueo crece con el uso. La segunda: la ventana se corta donde termina el modelo que estás midiendo. Mezclar caídas de cuota y modelos de respaldo en la misma media es la forma más rápida de concluir lo contrario de lo que pasa.
+
 ## Los números, para quien quiera revisarlos
 
 Siete días de operación real: 6,321 llamadas, 1,019 millones de tokens leídos de caché, 54.5 millones de entrada fresca, 7.34 millones de salida. Contexto por llamada: media 146 mil, mediana 93.6 mil, p95 381 mil. Costo semanal 25 a 26 dólares sobre un techo de 30.
@@ -60,7 +82,7 @@ Siete días de operación real: 6,321 llamadas, 1,019 millones de tokens leídos
 | 01 · Estabilidad | Cerrada |
 | 02 · Reducción de contexto | Aplicada y validada |
 | 03 · Delegación | Cerrada |
-| 04 · Eficiencia | Análisis y diseño terminados; parche preparado, sin activar |
+| 04 · Eficiencia | Cerrada: `proactive_prune_tokens` en 20,000, detector de esperas corregido y con test |
 
 ## Reproducir
 
